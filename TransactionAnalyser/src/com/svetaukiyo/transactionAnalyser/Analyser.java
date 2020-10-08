@@ -13,10 +13,7 @@ import java.util.Scanner;
 public class Analyser {
 
     public static void main(String[] args) throws ParseException {
-        List<Transaction> transactions = readFromCSV();
         SimpleDateFormat formatter = new SimpleDateFormat("DD/MM/YYYY HH:mm:ss");
-        int numberOfTransaction = 0;
-        double averageTransactionValue = 0.0;
 
         Scanner in = new Scanner(System.in);
         System.out.print("fromDate: ");
@@ -26,19 +23,44 @@ public class Analyser {
         System.out.print("merchant: ");
         String merchant = in.nextLine();
         in.close();
+
+        List<Transaction> transactionSortList = sortTransactionList(merchant, fromDate, toDate);
+        int numberOfTransactions = countNumberOfTransactions(transactionSortList);
+        double averageTransactionValue = countAverageTransactionValue(transactionSortList, numberOfTransactions);
+        System.out.println("numberOfTransactions = " + numberOfTransactions + "\naverageTransactionValue = " + averageTransactionValue);
+    }
+
+    private static List<Transaction> sortTransactionList(String merchant,  Date fromDate, Date toDate) {
+        List<Transaction> transactions = readFromCSV();
+        List<Transaction> sortTransactionList = new ArrayList<>();
         for (Transaction t : transactions) {
             if (t.getMerchant().equals(merchant)) {
                 if (t.getType().equals(Type.PAYMENT)) {
                     if (t.getDate().after(fromDate) && t.getDate().before(toDate)) {
-                        numberOfTransaction++;
-                        averageTransactionValue += t.getAmount();
+                        sortTransactionList.add(t);
                     }
                 }
             }
         }
-        System.out.println(averageTransactionValue/numberOfTransaction);
-        System.out.println(numberOfTransaction);
+        return sortTransactionList;
     }
+
+    private static int countNumberOfTransactions(List<Transaction> transactions) {
+        int numberOfTransaction = 0;
+        for (Transaction t : transactions) {
+                numberOfTransaction++;
+            }
+        return numberOfTransaction;
+    }
+
+    private static double countAverageTransactionValue(List<Transaction> transactions, int numberOfTransaction) {
+        double averageTransactionValue = 0.0;
+        for (Transaction t : transactions) {
+            averageTransactionValue += t.getAmount();
+        }
+        return averageTransactionValue/numberOfTransaction;
+    }
+
 
     private static Transaction createTransaction(String[] metadata) throws ParseException {
         String id = metadata[0];
